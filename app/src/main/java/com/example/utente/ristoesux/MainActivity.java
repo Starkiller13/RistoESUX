@@ -37,6 +37,15 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem tmpItem;
     private String TAG = MainActivity.class.getSimpleName();
     private ListView lv;
+    private Menu menu_belzoni;
+    private Menu menu_murialdo;
+    private Menu menu_agripolis;
+    private Menu menu_acli;
+    private Menu menu_sanfrancesco;
+    private Menu menu_piovego;
+    private Menu menu_forcellini;
+
+
 
 
     ArrayList<HashMap<String, String>> canteenList;
@@ -125,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
     private class GetCanteens extends AsyncTask<Void, Void, Void> {
+        private int servicecounter=0;
+        private int linkcounter=0;
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -141,12 +152,11 @@ public class MainActivity extends AppCompatActivity {
 
             Log.e(TAG, "Response from url: " + jsonStr);
             if (jsonStr != null) {
-                int k=1;
+                int k = 1;
                 try {
-
                     // Getting JSON Array node
                     JSONArray canteens = new JSONArray(jsonStr);
-                    Log.e(TAG,"Array length " + canteens.length());
+                    Log.e(TAG, "Array length " + canteens.length());
                     // looping through All Contacts
                     for (int i = 0; i < canteens.length(); i++) {
                         JSONObject c = canteens.getJSONObject(i);
@@ -162,61 +172,221 @@ public class MainActivity extends AppCompatActivity {
                         String name_t = type.getString("name");
                         String description_t = type.getString("description");
                         String lunchTime = c.getString("lunchTime");
-                        if(lunchTime=="null") {
+                        if (lunchTime.equalsIgnoreCase("null")) {
                             lunchTime = "Orario non disponibile";
                         }
                         String dinnerTime = c.getString("dinnerTime");
-                        if(dinnerTime=="null") {
+                        if (dinnerTime.equalsIgnoreCase("null")) {
                             dinnerTime = "Orario non disponibile";
                         }
                         JSONArray services = c.getJSONArray("services");
-                            String[] id_s= new String[3];
-                            String[] name_s= new String[3];
-                            String[] description_s= new String[3];
-                            for (int j = 0; j < services.length(); j++) {
-                                JSONObject s =services.getJSONObject(j);
-                                id_s[j]=s.getString("id");
-                                name_s[j]=s.getString("name");
-                                description_s[j]=s.getString("description");
-                            }
+                        String[] id_s = new String[6];
+                        String[] name_s = new String[6];
+                        String[] description_s = new String[6];
+
+                        for (int j = 0; j < services.length(); j++) {
+                            JSONObject s = services.getJSONObject(j);
+                            id_s[j] = s.getString("id");
+                            name_s[j] = s.getString("name");
+                            description_s[j] = s.getString("description");
+                            servicecounter++;
+                        }
                         String latitude = c.getString("latitude");
                         String longitude = c.getString("longitude");
-                        boolean active = c.getBoolean("active");
-                        boolean menuAvailable = c.getBoolean("menuAvailable");
+                        String active = c.getString("active");
+                        String menuAvailable = c.getString("menuAvailable");
                         JSONArray links = c.getJSONArray("links");
-                            String[] id_l= new String[3];
-                            String[] name_l= new String[3];
-                            String[] description_l= new String[3];
-                            String[] link_l= new String[3];
-                            for (int j = 0; j < links.length(); j++) {
-                                JSONObject l = links.getJSONObject(j);
-                                id_l[j]=l.getString("id");
-                                name_l[j]=l.getString("name");
-                                description_l[j]=l.getString("description");
-                                link_l[j]=l.getString("link");
-                            }
+                        String[] id_l = new String[6];
+                        String[] name_l = new String[6];
+                        String[] description_l = new String[6];
+                        String[] link_l = new String[6];
+                        for (int j = 0; j < links.length(); j++) {
+                            JSONObject l = links.getJSONObject(j);
+                            id_l[j] = l.getString("id");
+                            name_l[j] = l.getString("name");
+                            description_l[j] = l.getString("description");
+                            link_l[j] = l.getString("link");
+                            linkcounter++;
+                        }
 
                         String waitTimeDate = c.getString("waitTimeDate");
                         String waitTime = c.getString("waitTime");
-                            if(waitTime==null){
-                                waitTime="Tempo di attesa non disponibile";
-                            }else{
-                                waitTime=waitTime + " minuti";
-                            }
-                        /*JSONObject menu = new JSONObject("menu");
-                            JSONObject lunch= menu.getJSONObject("lunch");
+                        if (waitTime == null) {
+                            waitTime = "Tempo di attesa non disponibile";
+                        } else {
+                            waitTime = waitTime + " minuti";
+                        }
+                        if (Boolean.parseBoolean(menuAvailable) == true) {
+                            Menu menu_x = new Menu();
+                            JSONObject menu = c.getJSONObject("menu");
+                            try {
+
+                                JSONObject lunch = menu.getJSONObject("lunch");
                                 JSONArray maincourse = lunch.getJSONArray("maincourse");
-                            JSONObject dinner= menu.getJSONObject("dinner");
-                        */
+
+                                Log.e(TAG, "Array length " + maincourse.length());
+                                for (int j = 0; j < maincourse.length(); j++) {
+                                    JSONObject d = maincourse.getJSONObject(j);
+                                    menu_x.lunch.lunch_maincourse[j] = new Order();
+                                    menu_x.lunch.lunch_maincourse[j].id = d.getString("id");
+                                    menu_x.lunch.lunch_maincourse[j].name = d.getString("name");
+                                        /*menu_x.lunch.lunch_maincourse[j].link = d.getString("link");
+                                        menu_x.lunch.lunch_maincourse[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.lunch.lunch_maincourse[j].celiac = d.getBoolean("celiac");
+                                        menu_x.lunch.lunch_maincourse[j].frozen = d.getBoolean("frozen");
+                                        menu_x.lunch.lunch_maincourse[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.lunch.increment_index("maincourse");
+
+                                }
+                                JSONArray secondcourse = lunch.getJSONArray("secondcourse");
+
+                                Log.e(TAG, "Array length " + secondcourse.length());
+                                for (int j = 0; j < secondcourse.length(); j++) {
+                                    JSONObject d = secondcourse.getJSONObject(j);
+                                    menu_x.lunch.lunch_secondcourse[j] = new Order();
+                                    menu_x.lunch.lunch_secondcourse[j].id = d.getString("id");
+                                    menu_x.lunch.lunch_secondcourse[j].name = d.getString("name");
+                                        /*menu_x.lunch.lunch_secondcourse[j].link = d.getString("link");
+                                        menu_x.lunch.lunch_secondcourse[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.lunch.lunch_secondcourse[j].celiac = d.getBoolean("celiac");
+                                        menu_x.lunch.lunch_secondcourse[j].frozen = d.getBoolean("frozen");
+                                        menu_x.lunch.lunch_secondcourse[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.lunch.increment_index("secondcourse");
+                                }
+
+                                JSONArray sideorder = lunch.getJSONArray("sideorder");
+
+                                Log.e(TAG, "Array length " + sideorder.length());
+                                for (int j = 0; j < sideorder.length(); j++) {
+                                    JSONObject d = sideorder.getJSONObject(j);
+                                    menu_x.lunch.lunch_sideorder[j] = new Order();
+                                    menu_x.lunch.lunch_sideorder[j].id = d.getString("id");
+                                    menu_x.lunch.lunch_sideorder[j].name = d.getString("name");
+                                    menu_x.lunch.lunch_sideorder[j].link = d.getString("link");
+                                        /*menu_x.lunch.lunch_sideorder[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.lunch.lunch_sideorder[j].celiac = d.getBoolean("celiac");
+                                        menu_x.lunch.lunch_sideorder[j].frozen = d.getBoolean("frozen");
+                                        menu_x.lunch.lunch_sideorder[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.lunch.increment_index("sideorder");
+                                }
+
+                                JSONArray dessert = lunch.getJSONArray("dessert");
+
+                                Log.e(TAG, "Array length " + dessert.length());
+                                for (int j = 0; j < dessert.length(); j++) {
+                                    JSONObject d = dessert.getJSONObject(j);
+                                    menu_x.lunch.lunch_dessert[j] = new Order();
+                                    menu_x.lunch.lunch_dessert[j].id = d.getString("id");
+                                    menu_x.lunch.lunch_dessert[j].name = d.getString("name");
+                                    menu_x.lunch.lunch_dessert[j].link = d.getString("link");
+                                        /*menu_x.lunch.lunch_dessert[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.lunch.lunch_dessert[j].celiac = d.getBoolean("celiac");
+                                        menu_x.lunch.lunch_dessert[j].frozen = d.getBoolean("frozen");
+                                        menu_x.lunch.lunch_dessert[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.lunch.increment_index("dessert");
+
+                                }
+                            }catch(JSONException g){}
+                            try{
+                                JSONObject dinner = menu.getJSONObject("dinner");
+                                JSONArray maincourse_d;
+                                maincourse_d = dinner.getJSONArray("maincourse");
+                                Log.e(TAG, "Array length " + maincourse_d.length());
+                                for (int j = 0; j < maincourse_d.length(); j++) {
+                                    JSONObject d = maincourse_d.getJSONObject(j);
+                                    menu_x.dinner.dinner_maincourse[j] = new Order();
+                                    menu_x.dinner.dinner_maincourse[j].id = d.getString("id");
+                                    menu_x.dinner.dinner_maincourse[j].name = d.getString("name");
+                                        /*menu_x.dinner.dinner_maincourse[j].link = d.getString("link");
+                                        menu_x.dinner.dinner_maincourse[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.dinner.dinner_maincourse[j].celiac = d.getBoolean("celiac");
+                                        menu_x.dinner.dinner_maincourse[j].frozen = d.getBoolean("frozen");
+                                        menu_x.dinner.dinner_maincourse[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.dinner.increment_index("maincourse");
+                                }
+                                JSONArray secondcourse_d = dinner.getJSONArray("secondcourse");
+
+                                Log.e(TAG, "Array length " + secondcourse_d.length());
+                                for (int j = 0; j < secondcourse_d.length(); j++) {
+                                    JSONObject d = secondcourse_d.getJSONObject(j);
+                                    menu_x.dinner.dinner_secondcourse[j] = new Order();
+                                    menu_x.dinner.dinner_secondcourse[j].id = d.getString("id");
+                                    menu_x.dinner.dinner_secondcourse[j].name = d.getString("name");
+                                        /*menu_x.dinner.dinner_secondcourse[j].link = d.getString("link");
+                                        menu_x.dinner.dinner_secondcourse[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.dinner.dinner_secondcourse[j].celiac = d.getBoolean("celiac");
+                                        menu_x.dinner.dinner_secondcourse[j].frozen = d.getBoolean("frozen");
+                                        menu_x.dinner.dinner_secondcourse[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.dinner.increment_index("secondcourse");
+                                }
+
+                                JSONArray sideorder_d = dinner.getJSONArray("sideorder");
+
+                                Log.e(TAG, "Array length " + sideorder_d.length());
+                                for (int j = 0; j < sideorder_d.length(); j++) {
+                                    JSONObject d = sideorder_d.getJSONObject(j);
+                                    menu_x.dinner.dinner_sideorder[j] = new Order();
+                                    menu_x.dinner.dinner_sideorder[j].id = d.getString("id");
+                                    menu_x.dinner.dinner_sideorder[j].name = d.getString("name");
+                                        /*menu_x.dinner.dinner_sideorder[j].link = d.getString("link");
+                                        menu_x.dinner.dinner_sideorder[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.dinner.dinner_sideorder[j].celiac = d.getBoolean("celiac");
+                                        menu_x.dinner.dinner_sideorder[j].frozen = d.getBoolean("frozen");
+                                        menu_x.dinner.dinner_sideorder[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.dinner.increment_index("sideorder");
+                                }
+
+                                JSONArray dessert_d = dinner.getJSONArray("dessert");
+
+                                Log.e(TAG, "Array length " + dessert_d.length());
+                                for (int j = 0; j < dessert_d.length(); j++) {
+                                    JSONObject d = dessert_d.getJSONObject(j);
+                                    menu_x.dinner.dinner_dessert[j] = new Order();
+                                    menu_x.dinner.dinner_dessert[j].id = d.getString("id");
+                                    menu_x.dinner.dinner_dessert[j].name = d.getString("name");
+                                        /*menu_x.dinner.dinner_dessert[j].link = d.getString("link");
+                                        menu_x.dinner.dinner_dessert[j].vegetarian = d.getBoolean("vegetarian");
+                                        menu_x.dinner.dinner_dessert[j].celiac = d.getBoolean("celiac");
+                                        menu_x.dinner.dinner_dessert[j].frozen = d.getBoolean("frozen");
+                                        menu_x.dinner.dinner_dessert[j].pdg = d.getBoolean("pdg");*/
+                                    menu_x.dinner.increment_index("dessert");
+                                }
+                            } catch (JSONException f) {
+                            }
+                        }
+
+
 
                         // tmp hash map for single contact
                         HashMap<String, String> canteen = new HashMap<>();
                         // adding each child node to HashMap key => value
                         canteen.put("id", id);
                         canteen.put("name", name);
+                        canteen.put("address", address);
+                        canteen.put("city", city);
+                        canteen.put("phone", phone);
+                        canteen.put("email", email);
+                        canteen.put("website", website);
+                        canteen.put("id_t", id_t);
+                        canteen.put("name_t", name_t);
+                        canteen.put("description_t", description_t);
                         canteen.put("lunchTime", lunchTime);
                         canteen.put("dinnerTime", dinnerTime);
-
+                        for(int p=0;p<servicecounter;p++){
+                            canteen.put("id_s"+p, id_s[p]);
+                            canteen.put("name_s"+p, name_s[p]);
+                            canteen.put("description_s"+p, description_s[p]);
+                        }
+                        canteen.put("latitude",latitude);
+                        canteen.put("longitude",longitude);
+                        canteen.put("active",active);
+                        canteen.put("menuAvailable",menuAvailable);
+                        for(int p=0;p<linkcounter;p++){
+                            canteen.put("id_l"+p, id_l[p]);
+                            canteen.put("name_l"+p, name_l[p]);
+                            canteen.put("description_l"+p, description_l[p]);
+                            canteen.put("link_l"+p, link_l[p]);
+                        }
                         // adding contact to contact list
                         canteenList.add(canteen);
                         Log.e(TAG,"Iterazione: " + k);
