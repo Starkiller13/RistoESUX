@@ -12,8 +12,10 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = MainActivity.class.getSimpleName();
     private ListView lv;
 
+
     ArrayList<HashMap<String, String>> canteenList;
 
     @Override
@@ -54,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
         setupDrawerContent(nView);
 
         canteenList = new ArrayList<>(7);
-        lv = (ListView) findViewById(R.id.list);
         new GetCanteens().execute();
+        lv = (ListView) findViewById(R.id.list);
     }
 
     @Override
@@ -159,38 +162,40 @@ public class MainActivity extends AppCompatActivity {
                         String name_t = type.getString("name");
                         String description_t = type.getString("description");
                         String lunchTime = c.getString("lunchTime");
-                        if(lunchTime==null) {
+                        if(lunchTime=="null") {
                             lunchTime = "Orario non disponibile";
                         }
                         String dinnerTime = c.getString("dinnerTime");
-                        if(dinnerTime==null) {
+                        if(dinnerTime=="null") {
                             dinnerTime = "Orario non disponibile";
                         }
-                        /*JSONArray services = c.getJSONArray("services");
+                        JSONArray services = c.getJSONArray("services");
                             String[] id_s= new String[3];
                             String[] name_s= new String[3];
                             String[] description_s= new String[3];
                             for (int j = 0; j < services.length(); j++) {
-                                id_s[j]=services.getString(j);
-                                name_s[j]=services.getString(j+1);
-                                description_s[j]=services.getString(j+2);
-                            }*/
+                                JSONObject s =services.getJSONObject(j);
+                                id_s[j]=s.getString("id");
+                                name_s[j]=s.getString("name");
+                                description_s[j]=s.getString("description");
+                            }
                         String latitude = c.getString("latitude");
                         String longitude = c.getString("longitude");
                         boolean active = c.getBoolean("active");
                         boolean menuAvailable = c.getBoolean("menuAvailable");
-                        /*JSONArray links = c.getJSONArray("links");
+                        JSONArray links = c.getJSONArray("links");
                             String[] id_l= new String[3];
                             String[] name_l= new String[3];
                             String[] description_l= new String[3];
                             String[] link_l= new String[3];
-                            for (int j = 0; j < services.length(); j++) {
-                                id_l[j]=services.getString(j);
-                                name_l[j]=services.getString(j+1);
-                                description_l[j]=services.getString(j+2);
-                                link_l[j]=services.getString(j+3);
+                            for (int j = 0; j < links.length(); j++) {
+                                JSONObject l = links.getJSONObject(j);
+                                id_l[j]=l.getString("id");
+                                name_l[j]=l.getString("name");
+                                description_l[j]=l.getString("description");
+                                link_l[j]=l.getString("link");
                             }
-                           */
+
                         String waitTimeDate = c.getString("waitTimeDate");
                         String waitTime = c.getString("waitTime");
                             if(waitTime==null){
@@ -247,10 +252,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
+
             ListAdapter adapter = new SimpleAdapter(MainActivity.this, canteenList,
                     R.layout.list_item, new String[]{"name","lunchTime","dinnerTime"},
                     new int[]{R.id.nome, R.id.lunchTime, R.id.dinnerTime});
-
             lv.setAdapter(adapter);
         }
 
