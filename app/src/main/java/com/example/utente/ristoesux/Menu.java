@@ -12,66 +12,62 @@ public class Menu {
     public Lunch lunch;
     public Dinner dinner;
     public class Lunch {
-        public Lunch(){
-            l_index_maincourse=0;
-            l_index_secondcourse=0;
-            l_index_sideorder=0;
-            l_index_dessert=0;
-            lunch_maincourse = new Order[10];
-            lunch_secondcourse = new Order[10];
-            lunch_sideorder = new Order[10];
-            lunch_dessert = new Order[10];
+        public Lunch() {
+            index = new int[]{0,0,0,0};
+            maincourse = new String[10];
+            secondcourse = new String[10];
+            sideorder = new String[10];
+            dessert = new String[10];
+            maincourse[0]="Non disponibile";
+            secondcourse[0]="Non disponibile";
+            sideorder[0]="Non disponibile";
+            dessert[0]="Non disponibile";
         }
-        public void increment_index(String index){
-            if(index.equalsIgnoreCase("maincourse")){
-                l_index_maincourse++;
-            }else if(index.equalsIgnoreCase("secondcourse")){
-                l_index_secondcourse++;
-            }else if(index.equalsIgnoreCase("sideorder")){
-                l_index_sideorder++;
-            }else if(index.equalsIgnoreCase("dessert")){
-                l_index_dessert++;
+
+        public void increment_index(int i) {
+            index[i]++;
+        }
+
+        public String[] getString(){
+            if(maincourse!=null&&secondcourse!=null&&sideorder!=null&&dessert!=null) {
             }
+            return null;
         }
-        private int l_index_maincourse;
-        private int l_index_secondcourse;
-        private int l_index_sideorder;
-        private int l_index_dessert;
-        public Order[] lunch_maincourse;
-        public Order[] lunch_secondcourse;
-        public Order[] lunch_sideorder;
-        public Order[] lunch_dessert;
+
+
+        public int[] index;
+        public String[] maincourse;
+        public String[] secondcourse;
+        public String[] sideorder;
+        public String[] dessert;
     }
-    public class Dinner
-    {
-        public Dinner(){
-            d_index_maincourse=0;
-            d_index_secondcourse=0;
-            d_index_sideorder=0;
-            d_index_dessert=0;
-            dinner_maincourse = new Order[10];
-            dinner_secondcourse = new Order[10];
-            dinner_sideorder = new Order[10];
-            dinner_dessert = new Order[10];
+    public class Dinner {
+        public Dinner() {
+            index = new int[]{0,0,0,0};
+            maincourse = new String[10];
+            maincourse[0]="Non disponibile";
+            secondcourse = new String[10];
+            secondcourse[0]="Non disponibile";
+            sideorder = new String[10];
+            sideorder[0]="Non disponibile";
+            dessert = new String[10];
+            dessert[0]="Non disponibile";
         }
-        public void increment_index(String index){
-            if(index.equalsIgnoreCase("maincourse")){
-                d_index_maincourse++;
-            }else if(index.equalsIgnoreCase("secondcourse")){
-                d_index_secondcourse++;
-            }else if(index.equalsIgnoreCase("sideorder")){
-                d_index_sideorder++;
-            }else if(index.equalsIgnoreCase("dessert")){
-                d_index_dessert++;
+
+        public void increment_index(int i) {
+            index[i]++;
+        }
+
+        public String[] getString(){
+            if(maincourse!=null&&secondcourse!=null&&sideorder!=null&&dessert!=null) {
             }
+            return null;
         }
-        private int d_index_maincourse;
-        private int d_index_secondcourse;
-        private int d_index_sideorder;
-        private int d_index_dessert;
-        public Order[] dinner_maincourse;
-        public Order[] dinner_secondcourse;
-        public Order[] dinner_sideorder;
-        public Order[] dinner_dessert;
+
+        public int[] index;
+        public String[] maincourse;
+        public String[] secondcourse;
+        public String[] sideorder;
+        public String[] dessert;
     }
 }

@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:id="@+id/frag_container">
+        android:id="@+id/container">
 
         <include
             layout="@layout/navigation_action"
@@ -21,6 +21,7 @@
 
         <ListView
             android:id="@+id/list"
+            tools:listitem="@layout/list_item"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="60dp"></ListView>

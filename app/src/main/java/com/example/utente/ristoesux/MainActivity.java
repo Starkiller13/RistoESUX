@@ -1,6 +1,8 @@
 package com.example.utente.ristoesux;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -11,13 +13,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -27,34 +27,26 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static android.content.ContentValues.TAG;
-
-public class MainActivity extends AppCompatActivity {
-
+public class MainActivity extends AppCompatActivity{
     private DrawerLayout nDrawerLayout;
     private ActionBarDrawerToggle nToggle;
     private Toolbar nToolbar;
     private MenuItem tmpItem;
     private String TAG = MainActivity.class.getSimpleName();
     private ListView lv;
-    private Menu menu_belzoni;
-    private Menu menu_murialdo;
-    private Menu menu_agripolis;
-    private Menu menu_acli;
-    private Menu menu_sanfrancesco;
-    private Menu menu_piovego;
-    private Menu menu_forcellini;
-
-
-
-
+    OnMenuItemChecked listener1 = new OnMenuItemChecked() {
+        @Override
+        public void onCheck(String item) {
+            Log.e(TAG,item);
+        }
+    };
     ArrayList<HashMap<String, String>> canteenList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         nDrawerLayout =(DrawerLayout) findViewById(R.id.drawerLayout);
         nToggle= new ActionBarDrawerToggle(this, nDrawerLayout, R.string.open, R.string.close);
         nToolbar = (Toolbar) findViewById(R.id.nav_action);
@@ -64,12 +56,10 @@ public class MainActivity extends AppCompatActivity {
         nToggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setupDrawerContent(nView);
-
+        lv = (ListView) findViewById(R.id.list);
         canteenList = new ArrayList<>(7);
         new GetCanteens().execute();
-        lv = (ListView) findViewById(R.id.list);
     }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(nToggle.onOptionsItemSelected(item)){
@@ -77,47 +67,22 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
     public void selectItemDrawer(MenuItem menuItem){
         if(tmpItem==null)
             tmpItem=menuItem;
         else
             tmpItem.setChecked(false);
         Fragment myFragment =null;
-        Class fragmentClass;
-        switch (menuItem.getItemId()){
-            case R.id.nav_1:
-                fragmentClass=Belzoni.class;
-                break;
-            case R.id.nav_2:
-                fragmentClass=Murialdo.class;
-                break;
-            case R.id.nav_3:
-                fragmentClass=Forcellini.class;
-                break;
-            case R.id.nav_4:
-                fragmentClass=Acli.class;
-                break;
-            case R.id.nav_5:
-                fragmentClass=Agripolis.class;
-                break;
-            case R.id.nav_6:
-                fragmentClass=SanFrancesco.class;
-                break;
-            case R.id.nav_7:
-                fragmentClass=NordPiovego.class;
-                break;
-            default:
-                fragmentClass=Belzoni.class;
-        }
+        Class fragmentClass=FragmentMensa.class;
         try{
             myFragment = (Fragment) fragmentClass.newInstance();
         }catch(Exception e){
             e.printStackTrace();
         }
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.frag_container, myFragment).commit();
+        fragmentManager.beginTransaction().replace(R.id.container, myFragment).commit();
         menuItem.setChecked(true);
+        listener1.onCheck(menuItem.toString());
         tmpItem=menuItem;
         setTitle(menuItem.getTitle());
         nDrawerLayout.closeDrawers();
@@ -133,9 +98,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    private class GetCanteens extends AsyncTask<Void, Void, Void> {
-        private int servicecounter=0;
-        private int linkcounter=0;
+    //Interfacce
+    public interface OnUpdateListener {
+        public void onUpdate(Menu[] a);
+    }
+    public interface OnMenuItemChecked{
+        public void onCheck(String item);
+    }
+
+    public class GetCanteens extends AsyncTask<Void, Void, Void> {
+        private int servicecounter = 0;
+        private int linkcounter = 0;
+        private Menu[] menuList;
+
+        OnUpdateListener listener = new OnUpdateListener() {
+            @Override
+            public void onUpdate(Menu[] a) {
+            }
+        };
+
+        public void setUpdateListener(OnUpdateListener listener) {
+            this.listener = listener;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -149,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
             // Making a request to url and getting response
             String uri = "http://mobile.esupd.gov.it/api/reiservice.svc/canteens";
             String jsonStr = sh.makeServiceCall(uri);
-
+            menuList = new Menu[7];
             Log.e(TAG, "Response from url: " + jsonStr);
             if (jsonStr != null) {
                 int k = 1;
@@ -159,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Array length " + canteens.length());
                     // looping through All Contacts
                     for (int i = 0; i < canteens.length(); i++) {
+                        menuList[i] = new Menu();
                         JSONObject c = canteens.getJSONObject(i);
                         String id = c.getString("id");
                         String name = c.getString("name");
@@ -216,42 +202,28 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             waitTime = waitTime + " minuti";
                         }
-                        if (Boolean.parseBoolean(menuAvailable) == true) {
-                            Menu menu_x = new Menu();
-                            JSONObject menu = c.getJSONObject("menu");
-                            try {
+                        Menu menu_x = new Menu();
+                        // if (Boolean.parseBoolean(menuAvailable)) {
+                        JSONObject menu = c.getJSONObject("menu");
+                        try {
 
-                                JSONObject lunch = menu.getJSONObject("lunch");
-                                JSONArray maincourse = lunch.getJSONArray("maincourse");
-
+                            JSONObject lunch = menu.getJSONObject("lunch");
+                            JSONArray maincourse = lunch.getJSONArray("maincourse");
                                 Log.e(TAG, "Array length " + maincourse.length());
                                 for (int j = 0; j < maincourse.length(); j++) {
                                     JSONObject d = maincourse.getJSONObject(j);
-                                    menu_x.lunch.lunch_maincourse[j] = new Order();
-                                    menu_x.lunch.lunch_maincourse[j].id = d.getString("id");
-                                    menu_x.lunch.lunch_maincourse[j].name = d.getString("name");
-                                        /*menu_x.lunch.lunch_maincourse[j].link = d.getString("link");
-                                        menu_x.lunch.lunch_maincourse[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.lunch.lunch_maincourse[j].celiac = d.getBoolean("celiac");
-                                        menu_x.lunch.lunch_maincourse[j].frozen = d.getBoolean("frozen");
-                                        menu_x.lunch.lunch_maincourse[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.lunch.increment_index("maincourse");
-
+                                    menu_x.lunch.maincourse[j] = d.getString("name");
+                                    menu_x.lunch.increment_index(0);
                                 }
+
+
                                 JSONArray secondcourse = lunch.getJSONArray("secondcourse");
 
                                 Log.e(TAG, "Array length " + secondcourse.length());
                                 for (int j = 0; j < secondcourse.length(); j++) {
                                     JSONObject d = secondcourse.getJSONObject(j);
-                                    menu_x.lunch.lunch_secondcourse[j] = new Order();
-                                    menu_x.lunch.lunch_secondcourse[j].id = d.getString("id");
-                                    menu_x.lunch.lunch_secondcourse[j].name = d.getString("name");
-                                        /*menu_x.lunch.lunch_secondcourse[j].link = d.getString("link");
-                                        menu_x.lunch.lunch_secondcourse[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.lunch.lunch_secondcourse[j].celiac = d.getBoolean("celiac");
-                                        menu_x.lunch.lunch_secondcourse[j].frozen = d.getBoolean("frozen");
-                                        menu_x.lunch.lunch_secondcourse[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.lunch.increment_index("secondcourse");
+                                    menu_x.lunch.secondcourse[j] = d.getString("name");
+                                    menu_x.lunch.increment_index(1);
                                 }
 
                                 JSONArray sideorder = lunch.getJSONArray("sideorder");
@@ -259,15 +231,8 @@ public class MainActivity extends AppCompatActivity {
                                 Log.e(TAG, "Array length " + sideorder.length());
                                 for (int j = 0; j < sideorder.length(); j++) {
                                     JSONObject d = sideorder.getJSONObject(j);
-                                    menu_x.lunch.lunch_sideorder[j] = new Order();
-                                    menu_x.lunch.lunch_sideorder[j].id = d.getString("id");
-                                    menu_x.lunch.lunch_sideorder[j].name = d.getString("name");
-                                    menu_x.lunch.lunch_sideorder[j].link = d.getString("link");
-                                        /*menu_x.lunch.lunch_sideorder[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.lunch.lunch_sideorder[j].celiac = d.getBoolean("celiac");
-                                        menu_x.lunch.lunch_sideorder[j].frozen = d.getBoolean("frozen");
-                                        menu_x.lunch.lunch_sideorder[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.lunch.increment_index("sideorder");
+                                    menu_x.lunch.sideorder[j] = d.getString("name");
+                                    menu_x.lunch.increment_index(2);
                                 }
 
                                 JSONArray dessert = lunch.getJSONArray("dessert");
@@ -275,159 +240,125 @@ public class MainActivity extends AppCompatActivity {
                                 Log.e(TAG, "Array length " + dessert.length());
                                 for (int j = 0; j < dessert.length(); j++) {
                                     JSONObject d = dessert.getJSONObject(j);
-                                    menu_x.lunch.lunch_dessert[j] = new Order();
-                                    menu_x.lunch.lunch_dessert[j].id = d.getString("id");
-                                    menu_x.lunch.lunch_dessert[j].name = d.getString("name");
-                                    menu_x.lunch.lunch_dessert[j].link = d.getString("link");
-                                        /*menu_x.lunch.lunch_dessert[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.lunch.lunch_dessert[j].celiac = d.getBoolean("celiac");
-                                        menu_x.lunch.lunch_dessert[j].frozen = d.getBoolean("frozen");
-                                        menu_x.lunch.lunch_dessert[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.lunch.increment_index("dessert");
-
+                                    menu_x.lunch.dessert[j] = d.getString("name");
+                                    menu_x.lunch.increment_index(3);
                                 }
-                            }catch(JSONException g){}
-                            try{
+                            } catch(JSONException g){
+                            }
+                            try {
                                 JSONObject dinner = menu.getJSONObject("dinner");
                                 JSONArray maincourse_d;
                                 maincourse_d = dinner.getJSONArray("maincourse");
-                                Log.e(TAG, "Array length " + maincourse_d.length());
-                                for (int j = 0; j < maincourse_d.length(); j++) {
-                                    JSONObject d = maincourse_d.getJSONObject(j);
-                                    menu_x.dinner.dinner_maincourse[j] = new Order();
-                                    menu_x.dinner.dinner_maincourse[j].id = d.getString("id");
-                                    menu_x.dinner.dinner_maincourse[j].name = d.getString("name");
-                                        /*menu_x.dinner.dinner_maincourse[j].link = d.getString("link");
-                                        menu_x.dinner.dinner_maincourse[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.dinner.dinner_maincourse[j].celiac = d.getBoolean("celiac");
-                                        menu_x.dinner.dinner_maincourse[j].frozen = d.getBoolean("frozen");
-                                        menu_x.dinner.dinner_maincourse[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.dinner.increment_index("maincourse");
-                                }
-                                JSONArray secondcourse_d = dinner.getJSONArray("secondcourse");
+                                    Log.e(TAG, "Array length " + maincourse_d.length());
+                                    for (int j = 0; j < maincourse_d.length(); j++) {
+                                        JSONObject d = maincourse_d.getJSONObject(j);
+                                        menu_x.dinner.maincourse[j] = d.getString("name");
+                                        menu_x.dinner.increment_index(0);
+                                    }
 
-                                Log.e(TAG, "Array length " + secondcourse_d.length());
-                                for (int j = 0; j < secondcourse_d.length(); j++) {
-                                    JSONObject d = secondcourse_d.getJSONObject(j);
-                                    menu_x.dinner.dinner_secondcourse[j] = new Order();
-                                    menu_x.dinner.dinner_secondcourse[j].id = d.getString("id");
-                                    menu_x.dinner.dinner_secondcourse[j].name = d.getString("name");
-                                        /*menu_x.dinner.dinner_secondcourse[j].link = d.getString("link");
-                                        menu_x.dinner.dinner_secondcourse[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.dinner.dinner_secondcourse[j].celiac = d.getBoolean("celiac");
-                                        menu_x.dinner.dinner_secondcourse[j].frozen = d.getBoolean("frozen");
-                                        menu_x.dinner.dinner_secondcourse[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.dinner.increment_index("secondcourse");
-                                }
 
-                                JSONArray sideorder_d = dinner.getJSONArray("sideorder");
+                                    JSONArray secondcourse = dinner.getJSONArray("secondcourse");
 
-                                Log.e(TAG, "Array length " + sideorder_d.length());
-                                for (int j = 0; j < sideorder_d.length(); j++) {
-                                    JSONObject d = sideorder_d.getJSONObject(j);
-                                    menu_x.dinner.dinner_sideorder[j] = new Order();
-                                    menu_x.dinner.dinner_sideorder[j].id = d.getString("id");
-                                    menu_x.dinner.dinner_sideorder[j].name = d.getString("name");
-                                        /*menu_x.dinner.dinner_sideorder[j].link = d.getString("link");
-                                        menu_x.dinner.dinner_sideorder[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.dinner.dinner_sideorder[j].celiac = d.getBoolean("celiac");
-                                        menu_x.dinner.dinner_sideorder[j].frozen = d.getBoolean("frozen");
-                                        menu_x.dinner.dinner_sideorder[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.dinner.increment_index("sideorder");
-                                }
+                                    Log.e(TAG, "Array length " + secondcourse.length());
+                                    for (int j = 0; j < secondcourse.length(); j++) {
+                                        JSONObject d = secondcourse.getJSONObject(j);
+                                        menu_x.dinner.secondcourse[j] = d.getString("name");
+                                        menu_x.dinner.increment_index(1);
+                                    }
 
-                                JSONArray dessert_d = dinner.getJSONArray("dessert");
+                                    JSONArray sideorder = dinner.getJSONArray("sideorder");
 
-                                Log.e(TAG, "Array length " + dessert_d.length());
-                                for (int j = 0; j < dessert_d.length(); j++) {
-                                    JSONObject d = dessert_d.getJSONObject(j);
-                                    menu_x.dinner.dinner_dessert[j] = new Order();
-                                    menu_x.dinner.dinner_dessert[j].id = d.getString("id");
-                                    menu_x.dinner.dinner_dessert[j].name = d.getString("name");
-                                        /*menu_x.dinner.dinner_dessert[j].link = d.getString("link");
-                                        menu_x.dinner.dinner_dessert[j].vegetarian = d.getBoolean("vegetarian");
-                                        menu_x.dinner.dinner_dessert[j].celiac = d.getBoolean("celiac");
-                                        menu_x.dinner.dinner_dessert[j].frozen = d.getBoolean("frozen");
-                                        menu_x.dinner.dinner_dessert[j].pdg = d.getBoolean("pdg");*/
-                                    menu_x.dinner.increment_index("dessert");
-                                }
-                            } catch (JSONException f) {
+                                    Log.e(TAG, "Array length " + sideorder.length());
+                                    for (int j = 0; j < sideorder.length(); j++) {
+                                        JSONObject d = sideorder.getJSONObject(j);
+                                        menu_x.dinner.sideorder[j] = d.getString("name");
+                                        menu_x.dinner.increment_index(2);
+                                    }
+
+                                    JSONArray dessert = dinner.getJSONArray("dessert");
+
+                                    Log.e(TAG, "Array length " + dessert.length());
+                                    for (int j = 0; j < dessert.length(); j++) {
+                                        JSONObject d = dessert.getJSONObject(j);
+                                        menu_x.dinner.dessert[j] = d.getString("name");
+                                        menu_x.dinner.increment_index(3);
+                                    }
+                                } catch(JSONException f){}
+                            menuList[i] = menu_x;
+                            //}
+                            // tmp hash map for single contact
+                            HashMap<String, String> canteen = new HashMap<>();
+                            // adding each child node to HashMap key => value
+                            canteen.put("id", id);
+                            canteen.put("name", name);
+                            canteen.put("address", address);
+                            canteen.put("city", city);
+                            canteen.put("phone", phone);
+                            canteen.put("email", email);
+                            canteen.put("website", website);
+                            canteen.put("id_t", id_t);
+                            canteen.put("name_t", name_t);
+                            canteen.put("description_t", description_t);
+                            canteen.put("lunchTime", lunchTime);
+                            canteen.put("dinnerTime", dinnerTime);
+                            for (int p = 0; p < servicecounter; p++) {
+                                canteen.put("id_s" + p, id_s[p]);
+                                canteen.put("name_s" + p, name_s[p]);
+                                canteen.put("description_s" + p, description_s[p]);
                             }
+                            canteen.put("latitude", latitude);
+                            canteen.put("longitude", longitude);
+                            canteen.put("active", active);
+                            canteen.put("menuAvailable", menuAvailable);
+                            for (int p = 0; p < linkcounter; p++) {
+                                canteen.put("id_l" + p, id_l[p]);
+                                canteen.put("name_l" + p, name_l[p]);
+                                canteen.put("description_l" + p, description_l[p]);
+                                canteen.put("link_l" + p, link_l[p]);
+                            }
+                            // adding contact to contact list
+                            canteenList.add(canteen);
+                            Log.e(TAG, "Iterazione: " + k);
+                            k++;
                         }
+                    } catch( final JSONException e){
+                        Log.e(TAG, "Json parsing error: " + e.getMessage());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(),
+                                        "Json parsing error: " + e.getMessage(),
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
 
-
-
-                        // tmp hash map for single contact
-                        HashMap<String, String> canteen = new HashMap<>();
-                        // adding each child node to HashMap key => value
-                        canteen.put("id", id);
-                        canteen.put("name", name);
-                        canteen.put("address", address);
-                        canteen.put("city", city);
-                        canteen.put("phone", phone);
-                        canteen.put("email", email);
-                        canteen.put("website", website);
-                        canteen.put("id_t", id_t);
-                        canteen.put("name_t", name_t);
-                        canteen.put("description_t", description_t);
-                        canteen.put("lunchTime", lunchTime);
-                        canteen.put("dinnerTime", dinnerTime);
-                        for(int p=0;p<servicecounter;p++){
-                            canteen.put("id_s"+p, id_s[p]);
-                            canteen.put("name_s"+p, name_s[p]);
-                            canteen.put("description_s"+p, description_s[p]);
-                        }
-                        canteen.put("latitude",latitude);
-                        canteen.put("longitude",longitude);
-                        canteen.put("active",active);
-                        canteen.put("menuAvailable",menuAvailable);
-                        for(int p=0;p<linkcounter;p++){
-                            canteen.put("id_l"+p, id_l[p]);
-                            canteen.put("name_l"+p, name_l[p]);
-                            canteen.put("description_l"+p, description_l[p]);
-                            canteen.put("link_l"+p, link_l[p]);
-                        }
-                        // adding contact to contact list
-                        canteenList.add(canteen);
-                        Log.e(TAG,"Iterazione: " + k);
-                        k++;
                     }
-                } catch (final JSONException e) {
-                    Log.e(TAG, "Json parsing error: " + e.getMessage());
+
+                } else{
+                    Log.e(TAG, "Couldn't get json from server.");
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             Toast.makeText(getApplicationContext(),
-                                    "Json parsing error: " + e.getMessage(),
+                                    "Couldn't get json from server. Check LogCat for possible errors!",
                                     Toast.LENGTH_LONG).show();
                         }
                     });
-
                 }
 
-            } else {
-                Log.e(TAG, "Couldn't get json from server.");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(),
-                                "Couldn't get json from server. Check LogCat for possible errors!",
-                                Toast.LENGTH_LONG).show();
-                    }
-                });
+                return null;
+            }
+            @Override
+            protected void onPostExecute (Void result){
+                super.onPostExecute(result);
+                ListAdapter adapter1 = new SimpleAdapter(MainActivity.this, canteenList,
+                        R.layout.list_item, new String[]{"name", "lunchTime", "dinnerTime"},
+                        new int[]{R.id.nome, R.id.lunchTime, R.id.dinnerTime});
+                lv.setAdapter(adapter1);
+                if (listener != null)
+                    listener.onUpdate(menuList);
             }
 
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-
-            ListAdapter adapter = new SimpleAdapter(MainActivity.this, canteenList,
-                    R.layout.list_item, new String[]{"name","lunchTime","dinnerTime"},
-                    new int[]{R.id.nome, R.id.lunchTime, R.id.dinnerTime});
-            lv.setAdapter(adapter);
         }
 
     }
-}
